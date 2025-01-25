@@ -18,7 +18,7 @@ app.use(express.json());
 
 
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
-console.log(process.env.DB_PASS, process.env.DB_USER , "user credentials")
+
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.780sf.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 
@@ -49,14 +49,28 @@ async function run() {
         // Connect the client to the server	(optional starting in v4.7)
         await client.connect();
 
-        const database = client.db('tourBanglaDB')
-        // const menuCollection = database.collection("menu's");
-        // const userCollection = database.collection("users");
-        // const cartCollection = database.collection("carts");
-        // const reviewCollection = database.collection("reviews");
+        const database = client.db('tourBanglaDB');
+        const userCollection = database.collection('users')
+
 
         // creating jwt token
+        app.post('/jwt', (req, res) => {
+            const email = req.body;
+            const token = jwt.sign(email, process.env.SECRET_KEY, { expiresIn: '365d' });
+            res.send({ token })
+        })
+        app.post("/users", async (req, res) => {
+            const data = req.body;
+            console.log(data);
+            const isExist = await userCollection.findOne({email: data.email});
+            if (isExist) {
+                res.status(409).send({message:'user already exist', insertedId:null})
+            } else {
+            const result = await userCollection.insertOne(data);
+            res.send(result);
+            }
 
+        })
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
