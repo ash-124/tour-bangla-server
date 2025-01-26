@@ -50,7 +50,8 @@ async function run() {
         await client.connect();
 
         const database = client.db('tourBanglaDB');
-        const userCollection = database.collection('users')
+        const userCollection = database.collection('users');
+        const packageCollection = database.collection('packages');
 
 
         // creating jwt token
@@ -59,15 +60,29 @@ async function run() {
             const token = jwt.sign(email, process.env.SECRET_KEY, { expiresIn: '365d' });
             res.send({ token })
         })
+        //packages routes
+        app.get('/packages', async (req, res) => {
+            const random = req.query.random;
+            if (random) {
+                const result = await packageCollection.aggregate([{ $sample: { size: 3 } }]).toArray();
+                res.send(result);
+            } else {
+                const result = await packageCollection.find().toArray();
+                res.send(result);
+            }
+
+            
+        })
+
+        //users routes
         app.post("/users", async (req, res) => {
             const data = req.body;
-            console.log(data);
-            const isExist = await userCollection.findOne({email: data.email});
+            const isExist = await userCollection.findOne({ email: data.email });
             if (isExist) {
-                res.status(409).send({message:'user already exist', insertedId:null})
+                res.status(409).send({ message: 'user already exist', insertedId: null })
             } else {
-            const result = await userCollection.insertOne(data);
-            res.send(result);
+                const result = await userCollection.insertOne(data);
+                res.send(result);
             }
 
         })
