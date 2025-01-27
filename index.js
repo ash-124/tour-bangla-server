@@ -61,6 +61,7 @@ async function run() {
             res.send({ token })
         })
         //packages routes
+        // get all package data 
         app.get('/packages', async (req, res) => {
             const random = req.query.random;
             if (random) {
@@ -70,8 +71,13 @@ async function run() {
                 const result = await packageCollection.find().toArray();
                 res.send(result);
             }
-
-            
+        })
+        // get single package data
+        app.get('/package/:id', async(req, res)=>{
+            const id = req.params.id;
+            const query = {_id : new ObjectId(id)};
+            const result = await packageCollection.findOne(query);
+            res.send(result);
         })
 
         //users routes
