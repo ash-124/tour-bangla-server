@@ -1,9 +1,9 @@
+require('dotenv').config()
 const express = require('express');
 const app = express();
 const cors = require('cors');
 const jwt = require("jsonwebtoken");
 const cookieParser = require('cookie-parser');
-require('dotenv').config()
 const port = process.env.PORT || 5000;
 
 const corsOptions = {
@@ -47,7 +47,7 @@ const verifyToken = (req, res, next) => {
 async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
-        await client.connect();
+        // await client.connect();
 
         const database = client.db('tourBanglaDB');
         const userCollection = database.collection('users');
@@ -92,8 +92,20 @@ async function run() {
             }
 
         })
+        // isAdmin 
+        app.get('/user/role', async(req, res)=>{
+            const email = req.query.email;
+            const query ={ email : email};
+            const user = await userCollection.findOne(query);
+            const isAdmin = user?.role ==='admin';
+            const isTourGuide = user?.role ==='tour-guide';
+            const isTourist = user?.role ==='tourist';
+            const result = {isAdmin, isTourGuide, isTourist};
+            res.send(result)
+
+        })
         // Send a ping to confirm a successful connection
-        await client.db("admin").command({ ping: 1 });
+        // await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
         // Ensures that the client will close when you finish/error
