@@ -7,7 +7,7 @@ const cookieParser = require('cookie-parser');
 const port = process.env.PORT || 5000;
 
 const corsOptions = {
-    origin: ['http://localhost:5173', 'http://localhost:5174'],
+    origin: ['http://localhost:5173', 'https://bistro-boss-2c4ab.web.app', 'http://localhost:5174'],
     credentials: true,
 
 }
@@ -52,6 +52,8 @@ async function run() {
         const database = client.db('tourBanglaDB');
         const userCollection = database.collection('users');
         const packageCollection = database.collection('packages');
+        const applicationCollection = database.collection('applications');
+        const BookingsCollection = database.collection('bookings');
 
 
         // creating jwt token
@@ -73,9 +75,9 @@ async function run() {
             }
         })
         // get single package data
-        app.get('/package/:id', async(req, res)=>{
+        app.get('/package/:id', async (req, res) => {
             const id = req.params.id;
-            const query = {_id : new ObjectId(id)};
+            const query = { _id: new ObjectId(id) };
             const result = await packageCollection.findOne(query);
             res.send(result);
         })
@@ -85,25 +87,90 @@ async function run() {
             const data = req.body;
             const isExist = await userCollection.findOne({ email: data.email });
             if (isExist) {
-                res.status(409).send({ message: 'user already exist', insertedId: null })
+                return (res.status(409).send({ message: 'user already exist', insertedId: null }))
             } else {
                 const result = await userCollection.insertOne(data);
                 res.send(result);
             }
 
         })
+        //single user route 
+        app.get('/user/:email', async (req, res) => {
+            const email = req.params.email;
+            if (!email) {
+                res.send('No email found ')
+            }
+            const query = { email: email };
+            const result = await userCollection.findOne(query);
+            res.send(result);
+        })
+
+        // update user data
+        app.patch('/modifyUser', async(req, res) =>{
+            const data = req.body;
+            const filter = {email: data?.email};
+            const updateDoc = {
+                $set:{
+                    name: data?.name,
+                    email: data?.email
+                }
+            }
+            const result = await userCollection.updateOne(filter, updateDoc);
+            res.send(result);
+        })
         // isAdmin 
-        app.get('/user/role', async(req, res)=>{
+        app.get('/role-type', async (req, res) => {
             const email = req.query.email;
-            const query ={ email : email};
+            if (!email) {
+                res.send('email not found')
+            }
+            const query = { email: email };
             const user = await userCollection.findOne(query);
-            const isAdmin = user?.role ==='admin';
-            const isTourGuide = user?.role ==='tour-guide';
-            const isTourist = user?.role ==='tourist';
-            const result = {isAdmin, isTourGuide, isTourist};
+            const role = user?.role;
+            const isAdmin = (role === 'admin');
+            const isTourGuide = (role === 'tour-guide');
+            const isTourist = (role === 'tourist');
+            const result = { isAdmin, isTourGuide, isTourist };
             res.send(result)
 
+
         })
+        // get all tour-guides
+        app.get('/tour-guides', async (req, res) => {
+            const filter = { role: 'tour-guide' };
+            const result = await userCollection.find(filter).toArray();
+            res.send(result);
+
+        })
+
+
+        // applications routes
+
+        app.post('/application/tour-guide', async (req, res) => {
+            const applicationData = req.body;
+            const isApplied = await applicationCollection.findOne({ applicantEmail: applicationData?.applicantEmail })
+            if (isApplied) {
+                return (res.status(409).send({ message: 'User already applied', insertedId: null }))
+            } else {
+                const result = await applicationCollection.insertOne(applicationData);
+                res.send(result);
+            }
+
+        })
+        // bookings
+        app.post('/booking', async (req, res) => {
+            const data = req.body;
+            const result = await BookingsCollection.insertOne(data);
+            res.send(result)
+        })
+        app.get('/bookedPackages', async (req, res) => {
+            const email = req.query.email;
+            const filter = { userEmail: email };
+            const result = await BookingsCollection.find(filter).toArray();
+            res.send(result);
+        })
+
+
         // Send a ping to confirm a successful connection
         // await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
