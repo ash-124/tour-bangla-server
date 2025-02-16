@@ -106,11 +106,11 @@ async function run() {
         })
 
         // update user data
-        app.patch('/modifyUser', async(req, res) =>{
+        app.patch('/modifyUser', async (req, res) => {
             const data = req.body;
-            const filter = {email: data?.email};
+            const filter = { email: data?.email };
             const updateDoc = {
-                $set:{
+                $set: {
                     name: data?.name,
                     email: data?.email
                 }
@@ -167,6 +167,16 @@ async function run() {
             const email = req.query.email;
             const filter = { userEmail: email };
             const result = await BookingsCollection.find(filter).toArray();
+            res.send(result);
+        })
+        //cancel booked tour
+        app.delete('/cancel-booking', async (req, res) => {
+            const data = req.body;
+            const filter = {
+                packageId:data?.packageId,
+                userEmail: data?.email,
+            };
+            const result = await BookingsCollection.deleteOne(filter);
             res.send(result);
         })
 
