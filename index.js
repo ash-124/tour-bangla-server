@@ -155,7 +155,58 @@ async function run() {
                 const result = await applicationCollection.insertOne(applicationData);
                 res.send(result);
             }
+        })
 
+        app.get('/applicants', async (req, res) => {
+            const applicants = await applicationCollection.aggregate([
+            {
+                $lookup:{
+                    from: 'users',
+                    localField: 'applicantEmail',
+                    foreignField: 'email',
+                    as: 'applicantData',
+                    
+                }
+            },
+            {
+                $unwind:'$applicantData',
+            },
+            {
+                $project:{
+                    _id :1,
+                    applicantEmail: 1,
+                    cv: 1,
+                    inspiration:1,
+                    title:1,
+                    'applicantData.name':1,
+                    'applicantData.role':1,
+                    'applicantData.photoURL':1,
+                }
+            }
+            ]).toArray();
+           res.send(applicants);
+
+        })
+        // reject applicant
+
+        app.post('/applicant', async(req, res)=>{
+            const isReject = req.query.reject;
+            const {id, applicantEmail} = req.body;
+            const updateDoc = {
+                $set:{
+                    role:'tour-guide'
+                }
+            }
+            if(isReject){
+                 const deleteApplication = await applicationCollection.deleteOne({_id:new ObjectId(id)});
+                res.send({deleteStat:deleteApplication, rejectionCount: 1})
+                
+            }else{
+                
+                const makeTourGuide = await userCollection.updateOne({email:applicantEmail}, updateDoc);
+                const deleteApplication = await applicationCollection.deleteOne({applicantEmail});
+                res.send({acceptationCount:1, statusUpdate: makeTourGuide, deleteStat: deleteApplication }) 
+            }
         })
         // bookings
         app.post('/booking', async (req, res) => {
@@ -173,7 +224,7 @@ async function run() {
         app.delete('/cancel-booking', async (req, res) => {
             const data = req.body;
             const filter = {
-                packageId:data?.packageId,
+                packageId: data?.packageId,
                 userEmail: data?.email,
             };
             const result = await BookingsCollection.deleteOne(filter);
