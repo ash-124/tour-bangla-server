@@ -237,6 +237,23 @@ async function run() {
             const result = await BookingsCollection.find({ guideEmail: email }).toArray();
             res.send(result);
         })
+        // reject assigned tour by tour-guide
+        app.patch('/tour-rejection', async(req, res)=>{
+            const {clientEmail, guideEmail, packageId} = req.body;
+            const filter = {
+                userEmail: clientEmail,
+                guideEmail: guideEmail,
+                packageId : packageId
+            }
+            const updateDoc ={
+                $set:{
+                    status:'rejected'
+                }
+            }
+            const result = await BookingsCollection.updateOne(filter, updateDoc );
+            res.send(result);
+
+        })
 
         // Send a ping to confirm a successful connection
         // await client.db("admin").command({ ping: 1 });
