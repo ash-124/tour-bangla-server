@@ -159,53 +159,53 @@ async function run() {
 
         app.get('/applicants', async (req, res) => {
             const applicants = await applicationCollection.aggregate([
-            {
-                $lookup:{
-                    from: 'users',
-                    localField: 'applicantEmail',
-                    foreignField: 'email',
-                    as: 'applicantData',
-                    
+                {
+                    $lookup: {
+                        from: 'users',
+                        localField: 'applicantEmail',
+                        foreignField: 'email',
+                        as: 'applicantData',
+
+                    }
+                },
+                {
+                    $unwind: '$applicantData',
+                },
+                {
+                    $project: {
+                        _id: 1,
+                        applicantEmail: 1,
+                        cv: 1,
+                        inspiration: 1,
+                        title: 1,
+                        'applicantData.name': 1,
+                        'applicantData.role': 1,
+                        'applicantData.photoURL': 1,
+                    }
                 }
-            },
-            {
-                $unwind:'$applicantData',
-            },
-            {
-                $project:{
-                    _id :1,
-                    applicantEmail: 1,
-                    cv: 1,
-                    inspiration:1,
-                    title:1,
-                    'applicantData.name':1,
-                    'applicantData.role':1,
-                    'applicantData.photoURL':1,
-                }
-            }
             ]).toArray();
-           res.send(applicants);
+            res.send(applicants);
 
         })
         // reject applicant
 
-        app.post('/applicant', async(req, res)=>{
+        app.post('/applicant', async (req, res) => {
             const isReject = req.query.reject;
-            const {id, applicantEmail} = req.body;
+            const { id, applicantEmail } = req.body;
             const updateDoc = {
-                $set:{
-                    role:'tour-guide'
+                $set: {
+                    role: 'tour-guide'
                 }
             }
-            if(isReject){
-                 const deleteApplication = await applicationCollection.deleteOne({_id:new ObjectId(id)});
-                res.send({deleteStat:deleteApplication, rejectionCount: 1})
-                
-            }else{
-                
-                const makeTourGuide = await userCollection.updateOne({email:applicantEmail}, updateDoc);
-                const deleteApplication = await applicationCollection.deleteOne({applicantEmail});
-                res.send({acceptationCount:1, statusUpdate: makeTourGuide, deleteStat: deleteApplication }) 
+            if (isReject) {
+                const deleteApplication = await applicationCollection.deleteOne({ _id: new ObjectId(id) });
+                res.send({ deleteStat: deleteApplication, rejectionCount: 1 })
+
+            } else {
+
+                const makeTourGuide = await userCollection.updateOne({ email: applicantEmail }, updateDoc);
+                const deleteApplication = await applicationCollection.deleteOne({ applicantEmail });
+                res.send({ acceptationCount: 1, statusUpdate: makeTourGuide, deleteStat: deleteApplication })
             }
         })
         // bookings
@@ -231,6 +231,12 @@ async function run() {
             res.send(result);
         })
 
+        // tour-guide assigned tours
+        app.get('/assigned-tours', async (req, res) => {
+            const email = req.query.email;
+            const result = await BookingsCollection.find({ guideEmail: email }).toArray();
+            res.send(result);
+        })
 
         // Send a ping to confirm a successful connection
         // await client.db("admin").command({ ping: 1 });
