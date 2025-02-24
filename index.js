@@ -54,6 +54,7 @@ async function run() {
         const packageCollection = database.collection('packages');
         const applicationCollection = database.collection('applications');
         const BookingsCollection = database.collection('bookings');
+        const storiesCollection = database.collection('stories');
 
 
         // creating jwt token
@@ -238,22 +239,31 @@ async function run() {
             res.send(result);
         })
         // reject assigned tour by tour-guide
-        app.patch('/tour-rejection', async(req, res)=>{
-            const {clientEmail, guideEmail, packageId} = req.body;
+        app.patch('/tour-rejection', async (req, res) => {
+            const { clientEmail, guideEmail, packageId } = req.body;
             const filter = {
                 userEmail: clientEmail,
                 guideEmail: guideEmail,
-                packageId : packageId
+                packageId: packageId
             }
-            const updateDoc ={
-                $set:{
-                    status:'rejected'
+            const updateDoc = {
+                $set: {
+                    status: 'rejected'
                 }
             }
-            const result = await BookingsCollection.updateOne(filter, updateDoc );
+            const result = await BookingsCollection.updateOne(filter, updateDoc);
             res.send(result);
 
         })
+        // STORY RELATED API
+
+        // post story 
+        app.post('/story/upload', async(req,res)=>{
+            const storyData = req.body;
+            const result = await storiesCollection.insertOne(storyData);
+            res.send(result)
+        })
+
 
         // Send a ping to confirm a successful connection
         // await client.db("admin").command({ ping: 1 });
