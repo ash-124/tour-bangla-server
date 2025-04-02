@@ -138,9 +138,19 @@ async function run() {
         })
         // get all tour-guides
         app.get('/tour-guides', async (req, res) => {
-            const filter = { role: 'tour-guide' };
-            const result = await userCollection.find(filter).toArray();
-            res.send(result);
+            const random = req.query.random;
+            if (random) {
+                const result = await userCollection.aggregate([
+                    {$match:{role: 'tour-guide'}},
+                    {$sample: { size: 6 }}
+                ]).toArray();
+                res.send(result)
+            } else {
+                const filter = { role: 'tour-guide' };
+                const result = await userCollection.find(filter).toArray();
+                res.send(result);
+            }
+
 
         })
 
@@ -258,7 +268,7 @@ async function run() {
         // STORY RELATED API
 
         // post story 
-        app.post('/story/upload', async(req,res)=>{
+        app.post('/story/upload', async (req, res) => {
             const storyData = req.body;
             const result = await storiesCollection.insertOne(storyData);
             res.send(result)
