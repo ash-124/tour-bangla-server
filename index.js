@@ -64,6 +64,18 @@ async function run() {
             res.send({ token })
         })
         //packages routes
+        // post package data
+        app.post('/package', async (req, res) => {
+            const data = req.body;
+            console.log('package data', data)
+            const isExist = await packageCollection.findOne({ name: data.name });
+            if (isExist) {
+                return (res.status(409).send({ message: 'Same package already exist', insertedId: null }))
+            } else {
+                const result = await packageCollection.insertOne(data);
+                res.send(result);
+            }
+        })
         // get all package data 
         app.get('/packages', async (req, res) => {
             const random = req.query.random;
@@ -141,8 +153,8 @@ async function run() {
             const random = req.query.random;
             if (random) {
                 const result = await userCollection.aggregate([
-                    {$match:{role: 'tour-guide'}},
-                    {$sample: { size: 6 }}
+                    { $match: { role: 'tour-guide' } },
+                    { $sample: { size: 6 } }
                 ]).toArray();
                 res.send(result)
             } else {
