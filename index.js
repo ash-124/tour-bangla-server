@@ -94,7 +94,12 @@ async function run() {
             const result = await packageCollection.findOne(query);
             res.send(result);
         })
-
+        // Featured packages
+        app.get('/featured-package', async(req, res)=>{
+            const query = {tags:'Featured'};
+            const result = await packageCollection.find(query).sort({ price: 1 }).toArray(); 
+            res.send(result);
+        })
         //users routes
         app.post("/users", async (req, res) => {
             const data = req.body;
