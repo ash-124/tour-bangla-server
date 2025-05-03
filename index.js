@@ -95,9 +95,9 @@ async function run() {
             res.send(result);
         })
         // Featured packages
-        app.get('/featured-package', async(req, res)=>{
-            const query = {tags:'Featured'};
-            const result = await packageCollection.find(query).sort({ price: 1 }).toArray(); 
+        app.get('/featured-packages', async (req, res) => {
+            const query = { tags: 'Featured' };
+            const result = await packageCollection.find(query).sort({ price: 1 }).toArray();
             res.send(result);
         })
         //users routes
@@ -111,6 +111,11 @@ async function run() {
                 res.send(result);
             }
 
+        })
+        // All Users Route
+        app.get('/users', async (req, res) => {
+            const result = await userCollection.find().toArray();
+            res.send({ users: result });
         })
         //single user route 
         app.get('/user/:email', async (req, res) => {
