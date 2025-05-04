@@ -114,6 +114,18 @@ async function run() {
         })
         // All Users Route
         app.get('/users', async (req, res) => {
+            const { search, role } = req.query;
+            if (search || role) {
+                const result = await userCollection.aggregate([
+                    {
+                        $match: {
+                            ...(search && { name: { $regex: search, $options: "i" } }),
+                            ...(role && { role: role })
+                        }
+                    }
+                ]).toArray();
+                res.send({users:result})
+            }
             const result = await userCollection.find().toArray();
             res.send({ users: result });
         })
