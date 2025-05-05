@@ -124,7 +124,7 @@ async function run() {
                         }
                     }
                 ]).toArray();
-                res.send({users:result})
+                res.send({ users: result })
             }
             const result = await userCollection.find().toArray();
             res.send({ users: result });
@@ -139,7 +139,16 @@ async function run() {
             const result = await userCollection.findOne(query);
             res.send(result);
         })
-
+        // delete a single user
+        app.delete('/user', async (req, res) => {
+            const email = req.body.userEmail;
+            if (!email) {
+                return (res.status(400).send({ message: 'Email is missing', deletedCount: 0 }))
+            }
+            const result = await userCollection.deleteOne({ email: email })
+            res.send(result);
+            console.log(email, result)
+        })
         // update user data
         app.patch('/modifyUser', async (req, res) => {
             const data = req.body;
