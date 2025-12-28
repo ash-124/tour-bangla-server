@@ -274,6 +274,14 @@ async function run() {
             const result = await BookingsCollection.find(filter).toArray();
             res.send(result);
         })
+        // get single booking package data
+        app.get('/booking/:id', async(req,res)=>{
+            const {id} = req.params;
+            const query = {_id :new ObjectId(id)}
+            const result = await BookingsCollection.findOne(query);
+            res.send(result)
+
+        })
         //cancel booked tour
         app.delete('/cancel-booking', async (req, res) => {
             const data = req.body;
