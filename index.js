@@ -56,6 +56,7 @@ async function run() {
         const applicationCollection = database.collection('applications');
         const BookingsCollection = database.collection('bookings');
         const storiesCollection = database.collection('stories');
+        const paymentsCollection = database.collection('payments');
 
 
         // creating jwt token
@@ -304,6 +305,38 @@ async function run() {
             })
             res.send({ clientSecret: paymentIntent.client_secret })
             // console.log(amount, paymentIntent.client_secret, "from payment intent")
+        })
+        // change status after success ful payment 
+        app.patch('/successful-payment', async (req, res) => {
+            try {
+                const { bookingId,
+                    packageName,
+                    transactionId,
+                    amount,
+                    userEmail,
+                    date} = req.body;
+                const filter = { _id: new ObjectId(bookingId) };
+                const updateDoc = {
+                    $set: {
+                        status: 'in-review'
+                    }
+                }
+                const changeStatus = await BookingsCollection.updateOne(filter, updateDoc);
+                const paymentDoc ={
+                     bookingId:new ObjectId(bookingId),
+                    packageName,
+                    transactionId,
+                    amount,
+                    userEmail,
+                    date
+                }
+                const savePayment = await paymentsCollection.insertOne(paymentDoc);
+                res.send({ success: true, changeStatus, savePayment })
+            } catch (error) {
+                console.error(error);
+                res.status(500).send({ success: false, message: 'Payment failed' });
+            }
+
         })
         // tour-guide assigned tours
         app.get('/assigned-tours', async (req, res) => {
