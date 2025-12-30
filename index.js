@@ -370,10 +370,13 @@ async function run() {
             res.send(result)
         })
         // Get story of a specific person 
-        app.get('/story', async(req,res)=>{
+        app.get('/stories', async(req,res)=>{
             const {email} = req.query;
             const filter = {userEmail:email};
             const stories = await storiesCollection.find(filter).toArray();
+            if(!stories){
+                res.status(404).send({status:"User have posted any stories"})
+            }
             res.status(200).send(stories)
         })
 
