@@ -314,7 +314,7 @@ async function run() {
                     transactionId,
                     amount,
                     userEmail,
-                    date} = req.body;
+                    date } = req.body;
                 const filter = { _id: new ObjectId(bookingId) };
                 const updateDoc = {
                     $set: {
@@ -322,13 +322,13 @@ async function run() {
                     }
                 }
                 const changeStatus = await BookingsCollection.updateOne(filter, updateDoc);
-                const paymentDoc ={
-                     bookingId:new ObjectId(bookingId),
+                const paymentDoc = {
+                    bookingId: new ObjectId(bookingId),
                     packageName,
                     transactionId,
                     amount,
                     userEmail,
-                    date
+                    date: new Date()
                 }
                 const savePayment = await paymentsCollection.insertOne(paymentDoc);
                 res.send({ success: true, changeStatus, savePayment })
@@ -369,7 +369,13 @@ async function run() {
             const result = await storiesCollection.insertOne(storyData);
             res.send(result)
         })
-
+        // Get story of a specific person 
+        app.get('/story', async(req,res)=>{
+            const {email} = req.query;
+            const filter = {userEmail:email};
+            const stories = await storiesCollection.find(filter).toArray();
+            res.status(200).send(stories)
+        })
 
         // Send a ping to confirm a successful connection
         // await client.db("admin").command({ ping: 1 });
