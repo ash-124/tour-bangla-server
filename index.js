@@ -361,6 +361,22 @@ async function run() {
             res.send(result);
 
         })
+        app.patch('/tour-accepted', async (req, res) => {
+            const { clientEmail, guideEmail, packageId } = req.body;
+            const filter = {
+                userEmail: clientEmail,
+                guideEmail: guideEmail,
+                packageId: packageId
+            }
+            const updateDoc = {
+                $set: {
+                    status: 'accepted'
+                }
+            }
+            const result = await BookingsCollection.updateOne(filter, updateDoc);
+            res.send(result);
+
+        })
         // STORY RELATED API
 
         // post story 
@@ -370,12 +386,12 @@ async function run() {
             res.send(result)
         })
         // Get story of a specific person 
-        app.get('/stories', async(req,res)=>{
-            const {email} = req.query;
-            const filter = {userEmail:email};
+        app.get('/stories', async (req, res) => {
+            const { email } = req.query;
+            const filter = { userEmail: email };
             const stories = await storiesCollection.find(filter).toArray();
-            if(!stories){
-                res.status(404).send({status:"User have posted any stories"})
+            if (!stories) {
+                res.status(404).send({ status: "User have posted any stories" })
             }
             res.status(200).send(stories)
         })
